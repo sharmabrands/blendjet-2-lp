@@ -1,45 +1,37 @@
 var UPSELL_CONFIG = {
-  UPSELL_COLLECTION_HANDLE: "hoox-upsell",
+  UPSELL_PRODUCT_HANDLE: "jetpack-smoothies",
   UPDATE_IMAGE_ON_VARIANT_CHANGE: true,
   SHOP_SECTION_UPSELL_DIV_ID: "shop-upsell",
   CART_SECTION_UPSELL_DIV_ID: "cart-upsell",
   ADD_TO_CART_TEXT: "ADD",
   OUT_OF_STOCK_TEXT: "OUT OF STOCK",
 };
-var UPSELL_STOREFRONT_QUERY_UPSELL = `{
-collectionByHandle(handle: "${UPSELL_CONFIG.UPSELL_COLLECTION_HANDLE}") {
-products(first: 20) {
-edges {
-node {
-id
-title
-options {
-id
-name
-values
-}
-variants(first: 200) {
-nodes {
-  title
-  id
-  selectedOptions {
-    name
-    value
-  }
-  price { amount }
-  compareAtPrice { amount }
-  availableForSale
-  quantityAvailable
-  image {
-    src
-  }
-}
-}
-}
-}
-}
-}
-}`;
+var UPSELL_STOREFRONT_QUERY_UPSELL = `
+    productByHandle(handle: ${UPSELL_PRODUCT_HANDLE}) {
+      title
+      priceRangeV2 {
+        maxVariantPrice {
+          amount
+        }
+      }
+      variants(first: 1) {
+              edges {
+                node {
+                  id
+                  title
+                }
+              }
+            }
+      images(first: 1) {
+        edges {
+          node {
+            url
+            altText
+          }
+        }
+      }
+    }
+  `;
 var UPSELL_DATA = null;
 
 fetchUpsellData();
@@ -52,9 +44,9 @@ async function fetchUpsellData() {
       body: JSON.stringify({ query: UPSELL_STOREFRONT_QUERY_UPSELL }),
     });
     var responseJson = await response.json();
-
+    
     var data = responseJson?.data?.collectionByHandle?.products?.edges;
-
+    console.log("UPSELL-DATA", data);
     if (!!data?.length) {
       var variantsProductsData = [];
       var dataFiltered = data.map(function ({ node }) {

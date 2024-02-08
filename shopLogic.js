@@ -86,7 +86,7 @@ async function fetchProduct() {
   } catch (e) {
     console.log(e, "error", "fetchProduct");
   }
-  console.log(SHOP_PRODUCTS_DATA);
+  console.log("SHOP-DATA", SHOP_PRODUCTS_DATA);
 }
 
 function shopSectionRender(products) {
