@@ -77,6 +77,7 @@ async function fetchProduct() {
     }
 
     response.json().then(function (data) {
+        console.log(data);
       if (data?.data?.nodes) {
         var products = data?.data?.nodes;
         shopSectionRender(products);
