@@ -102,7 +102,6 @@
         throw new Error(message);
       }
       response.json().then(function(data) {
-        console.log(data);
         if (data?.data?.nodes) {
           var products = data?.data?.nodes;
           shopSectionRender(products);
@@ -703,7 +702,7 @@
     OUT_OF_STOCK_TEXT: "OUT OF STOCK"
   };
   var UPSELL_STOREFRONT_QUERY_UPSELL = `
-    productByHandle(handle: ${UPSELL_PRODUCT_HANDLE}) {
+    productByHandle(handle: ${UPSELL_CONFIG.UPSELL_PRODUCT_HANDLE}) {
       title
       priceRangeV2 {
         maxVariantPrice {
