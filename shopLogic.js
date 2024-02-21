@@ -748,6 +748,12 @@ window.onload = function () {
             left: 0,
             behavior: "smooth",
           });
+        } else if (window.innerWidth > 767 && window.innerWidth <= 991) {
+          window.scrollTo({
+            top: 450 + heightDiff,
+            left: 0,
+            behavior: "smooth",
+          });
         } else {
           window.scrollTo({
             top: 120 + heightDiff,
@@ -759,7 +765,7 @@ window.onload = function () {
         seeMoreTextBlock.innerText = expandText;
         if (window.innerWidth <= 991) {
           window.scrollTo({
-            top: 530,
+            top: 600,
             left: 0,
             behavior: "smooth",
           });
