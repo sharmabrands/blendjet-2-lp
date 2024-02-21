@@ -177,6 +177,7 @@ section.cart-drawer__items {
 .cart-drawer .cart-drawer__body {
   display: -webkit-box;
   display: -ms-flexbox;
+  overflow: scroll;
   display: flex;
   -webkit-box-orient: vertical;
   -webkit-box-direction: normal;

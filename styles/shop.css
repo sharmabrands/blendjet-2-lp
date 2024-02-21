@@ -231,7 +231,7 @@
 
 @media (max-width: 479px) {
   .shop-custom.scrolled-past .shop-custom-option__values {
-    padding-left: 2rem !important;
+    padding-left: 2.5rem !important;
   }
 
   .shop-custom.scrolled-past .shop-custom-discount-applied {

@@ -736,7 +736,7 @@ window.onload = function () {
       if (seeMoreTextBlock.innerText === expandText) {
         seeMoreTextBlock.innerText = shrinkText;
         heightDiff = Math.abs(origSwatchHeight - newSwatchHeight);
-        if (window.innerWidth <= 991 && window.innerWidth >= 480) {
+        if (window.innerWidth <= 767 && window.innerWidth >= 480) {
           window.scrollTo({
             top: 370 + heightDiff,
             left: 0,
