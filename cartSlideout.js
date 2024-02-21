@@ -1,8 +1,14 @@
+import Vue from "vue/dist/vue.js";
+
 var LOCAL_STORAGE_CART_DATA = window.location.href + "_LP_CART_DATA";
 var classCartTrigger = ".js-cart-trigger";
 var classCartTriggerCount = ".js-cart-trigger-count";
 var classShopWrapper = ".js-shop";
 var classAtcButton = ".js-atc-button";
+var classAtcUpsellButton = ".js-atc-button-upsell";
+var classAtcUpsellButtonMobile = ".js-atc-button-upsell-mobile";
+var classProductQuantity = ".shop-custom-quantity__value";
+var classProductUpsellQuantity = "shop-custom-quantity__value-upsell";
 var cartItem = {
   name: "cart-item",
   props: ["item", "currency"],
@@ -61,10 +67,27 @@ var vm = new Vue({
     cartVisible() {
       this.isCartDrawerVisible = true;
       document.querySelector("body").style.overflow = "hidden";
+      if (
+        document.querySelector(".shop-custom") &&
+        document
+          .querySelector(".shop-custom")
+          .classList.contains("scrolled-past")
+      ) {
+        document.querySelector(".shop-custom").style.opacity = "0";
+      }
     },
     cartHidden() {
       this.isCartDrawerVisible = false;
       document.querySelector("body").style.overflow = "unset";
+
+      if (
+        document.querySelector(".shop-custom") &&
+        document
+          .querySelector(".shop-custom")
+          .classList.contains("scrolled-past")
+      ) {
+        document.querySelector(".shop-custom").style.opacity = "1";
+      }
     },
     cartItemQuantityIncrease(id) {
       var elementPos = this.cartData
@@ -128,60 +151,104 @@ var vm = new Vue({
         );
       }
     },
-    domAddToCart() {
-      var atcButtonElementAll = document.querySelectorAll(classAtcButton);
-      if (atcButtonElementAll && !!atcButtonElementAll.length) {
-        atcButtonElementAll.forEach(
-          function (atcButton) {
-            atcButton.addEventListener(
-              "click",
-              function () {
-                var productId =
-                  atcButton.dataset && atcButton.dataset.productId;
-                var productQuantity =
-                  atcButton.dataset && atcButton.dataset.productQuantity;
+    domAddToCartMain() {
+      var atcButton = document.querySelector(classAtcButton);
+      atcButton.addEventListener(
+        "click",
+        function () {
+          var productId = atcButton.dataset && atcButton.dataset.productId;
+          var productQuantity =
+            (atcButton.dataset && atcButton.dataset.productQuantity) ||
+            document.querySelector(classProductQuantity).innerHTML;
+          if (
+            productId &&
+            productQuantity &&
+            this.productsData &&
+            !!this.productsData.length
+          ) {
+            var isProductInCart = this.cartData.find(function (item) {
+              return +item.id === +productId;
+            });
 
-                if (
-                  productId &&
-                  productQuantity &&
-                  this.productsData &&
-                  !!this.productsData.length
-                ) {
-                  var isProductInCart = this.cartData.find(function (item) {
-                    return +item.id === +productId;
-                  });
+            if (isProductInCart) {
+              var elementPos = this.cartData
+                .map(function (x) {
+                  return +x.id;
+                })
+                .indexOf(+productId);
+              var objectFound = this.cartData[elementPos];
+              var _cartData = [...this.cartData];
+              _cartData[elementPos].quantity =
+                +objectFound.quantity + +productQuantity;
+              this.cartData = _cartData;
+            } else {
+              var productData = this.productsData.find(function (item) {
+                return +item.id === +productId;
+              });
 
-                  if (isProductInCart) {
-                    var elementPos = this.cartData
-                      .map(function (x) {
-                        return +x.id;
-                      })
-                      .indexOf(+productId);
-                    var objectFound = this.cartData[elementPos];
-                    var _cartData = [...this.cartData];
-                    _cartData[elementPos].quantity =
-                      +objectFound.quantity + +productQuantity;
-                    this.cartData = _cartData;
-                  } else {
-                    var productData = this.productsData.find(function (item) {
-                      return +item.id === +productId;
-                    });
+              if (productData && productData.id) {
+                this.cartData.unshift({
+                  ...productData,
+                  quantity: productQuantity,
+                });
+              }
+            }
+            this.cartVisible();
+          }
+        }.bind(this)
+      );
+    },
+    domAddToCartUpsell() {
+      var atcButtonUpsell =
+        window.innerWidth < 480
+          ? document.querySelector(classAtcUpsellButtonMobile)
+          : document.querySelector(classAtcUpsellButton);
+      atcButtonUpsell.addEventListener(
+        "click",
+        function () {
+          var productId =
+            atcButtonUpsell.dataset && atcButtonUpsell.dataset.productId;
+          var productQuantity =
+            (atcButtonUpsell.dataset &&
+              atcButtonUpsell.dataset.productQuantity) ||
+            document.querySelector(classProductUpsellQuantity).innerHTML;
+          if (
+            productId &&
+            productQuantity &&
+            this.productsData &&
+            !!this.productsData.length
+          ) {
+            var isProductInCart = this.cartData.find(function (item) {
+              return +item.id === +productId;
+            });
 
-                    if (productData && productData.id) {
-                      this.cartData.unshift({
-                        ...productData,
-                        quantity: productQuantity,
-                      });
-                    }
-                  }
+            if (isProductInCart) {
+              var elementPos = this.cartData
+                .map(function (x) {
+                  return +x.id;
+                })
+                .indexOf(+productId);
+              var objectFound = this.cartData[elementPos];
+              var _cartData = [...this.cartData];
+              _cartData[elementPos].quantity =
+                +objectFound.quantity + +productQuantity;
+              this.cartData = _cartData;
+            } else {
+              var productData = this.productsData.find(function (item) {
+                return +item.id === +productId;
+              });
 
-                  this.cartVisible();
-                }
-              }.bind(this)
-            );
-          }.bind(this)
-        );
-      }
+              if (productData && productData.id) {
+                this.cartData.unshift({
+                  ...productData,
+                  quantity: productQuantity,
+                });
+              }
+            }
+            this.cartVisible();
+          }
+        }.bind(this)
+      );
     },
     domUpdateCartItems() {
       var cartItemsLength = !!this.cartData.length
@@ -193,6 +260,12 @@ var vm = new Vue({
       if (countElement) {
         countElement.innerHTML = cartItemsLength;
       }
+      if (countElement.innerHTML === "0") {
+        countElement.style.display = "none";
+      } else {
+        countElement.style.display = "flex";
+      }
+
       this.cartDataLength = cartItemsLength;
     },
     smoothScroll() {
@@ -223,39 +296,39 @@ var vm = new Vue({
         window.location.assign(finalUrl);
       }
     },
-    cartUpsellHandler(data) {
-      var cartUpsellEl = document.getElementById("cart-upsell");
-      var cartUpsellWrapper = document.querySelector(".cart-upsell__wrapper");
-      var cartUpsellItemsEl = cartUpsellEl.querySelectorAll(".upsell-item");
-      var cartUpsellTitle = cartUpsellWrapper.querySelector(
-        ".cart-upsell__title"
-      );
+    // cartUpsellHandler(data) {
+    //   var cartUpsellEl = document.getElementById("cart-upsell");
+    //   var cartUpsellWrapper = document.querySelector(".cart-upsell__wrapper");
+    //   var cartUpsellItemsEl = cartUpsellEl.querySelectorAll(".upsell-item");
+    //   var cartUpsellTitle = cartUpsellWrapper.querySelector(
+    //     ".cart-upsell__title"
+    //   );
 
-      if (cartUpsellEl && cartUpsellItemsEl) {
-        cartUpsellItemsEl.forEach(function (item) {
-          var elProductId = item.dataset.upsellProductId;
-          var findUpsellItemInData = data.some(function (el) {
-            return +el.idProduct === +elProductId;
-          });
+    //   if (cartUpsellEl && cartUpsellItemsEl) {
+    //     cartUpsellItemsEl.forEach(function (item) {
+    //       var elProductId = item.dataset.upsellProductId;
+    //       var findUpsellItemInData = data.some(function (el) {
+    //         return +el.idProduct === +elProductId;
+    //       });
 
-          if (findUpsellItemInData) {
-            item.classList.add("display-article");
-          } else {
-            item.classList.remove("display-article");
-          }
-        });
-        var isUpsellSectionVisible = [...cartUpsellItemsEl].some(function (
-          item
-        ) {
-          return !item.classList.contains("display-article");
-        });
+    //       if (findUpsellItemInData) {
+    //         item.classList.add("display-article");
+    //       } else {
+    //         item.classList.remove("display-article");
+    //       }
+    //     });
+    //     var isUpsellSectionVisible = [...cartUpsellItemsEl].some(function (
+    //       item
+    //     ) {
+    //       return !item.classList.contains("display-article");
+    //     });
 
-        cartUpsellEl.style.display = isUpsellSectionVisible ? "block" : "none";
-        cartUpsellTitle.style.display = isUpsellSectionVisible
-          ? "block"
-          : "none";
-      }
-    },
+    //     cartUpsellEl.style.display = isUpsellSectionVisible ? "block" : "none";
+    //     cartUpsellTitle.style.display = isUpsellSectionVisible
+    //       ? "block"
+    //       : "none";
+    //   }
+    // },
   },
   watch: {
     cartData(data) {
@@ -267,7 +340,7 @@ var vm = new Vue({
       );
       this.domUpdateCartItems();
       this.calcTotalPrice();
-      this.cartUpsellHandler(data);
+      //this.cartUpsellHandler(data);
     },
   },
   mounted() {
@@ -276,11 +349,11 @@ var vm = new Vue({
       if (window.PRODUCTS_DATA) {
         clearInterval(limitedInterval);
 
-        // OVDE POZOVITE ONE FUNKCIJE STO SE NALAZE U MOUNTED
         that.fetchProductData();
         that.fetchCartData();
         that.domToggleCartDrawer();
-        that.domAddToCart();
+        that.domAddToCartMain();
+        that.domAddToCartUpsell();
         that.domUpdateCartItems();
       }
     }, 1000);

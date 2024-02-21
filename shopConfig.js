@@ -8,6 +8,17 @@ window.SHOP_CONFIG = [
     domElId: "shop-section-1",
     galleryId: "shop-section-gallery-1",
   },
+  {
+    productId: "6555665334338",
+    upsellItemId: "shop-section-upsell-1",
+    upsellItemTitleId: "shop-section-upsell-title",
+    upsellItemPriceId: "shop-section-upsell-price",
+    upsellItemQuantityId: "shop-section-upsell-quantity",
+    upsellItemSubmitId: "shop-section-upsell-submit",
+    upsellItemPlusId: "shop-section-upsell-plus",
+    upsellItemMinusId: "shop-section-upsell-minus",
+
+  },
 ];
 window.STOREFRONT_API_KEY = "32ec18da35149dcec235531b328003b5";
 window.STOREFRONT_SHOP_URL = "https://blendjet.myshopify.com";

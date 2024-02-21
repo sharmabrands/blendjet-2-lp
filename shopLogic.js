@@ -79,13 +79,99 @@ async function fetchProduct() {
     response.json().then(function (data) {
       if (data?.data?.nodes) {
         var products = data?.data?.nodes;
-        shopSectionRender(products);
+        var mainProduct = [],
+          upsellProduct = [];
+        mainProduct.push(products[0]);
+        upsellProduct.push(products[1]);
+        shopSectionRender(mainProduct);
+        upsellSectionRender(upsellProduct);
       }
     });
   } catch (e) {
     console.log(e, "error", "fetchProduct");
   }
-  console.log("SHOP-DATA", SHOP_PRODUCTS_DATA);
+}
+
+function upsellSectionRender(products) {
+  const config = window.SHOP_CONFIG[1];
+  var product = products.find(function (product) {
+    return String(removePrefixFromId(product.id)) === String(config.productId);
+  });
+
+  var upsellItem = document.getElementById(config.upsellItemId);
+  var upsellItemTitle = document.getElementById(config.upsellItemTitleId);
+  var upsellItemPrice = document.getElementById(config.upsellItemPriceId);
+  var upsellItemQuantity = document.getElementById(config.upsellItemQuantityId);
+  var upsellBtnSubmit = document.getElementById(config.upsellItemSubmitId);
+  var upsellBtnPlus = document.getElementById(config.upsellItemPlusId);
+  var upsellBtnMinus = document.getElementById(config.upsellItemMinusId);
+
+  if (window.innerWidth < 480) {
+    upsellItem = document.getElementById(`${config.upsellItemId}-mobile`);
+    upsellItemTitle = document.getElementById(
+      `${config.upsellItemTitleId}-mobile`
+    );
+    upsellItemPrice = document.getElementById(
+      `${config.upsellItemPriceId}-mobile`
+    );
+    upsellItemQuantity = document.getElementById(
+      `${config.upsellItemQuantityId}-mobile`
+    );
+    upsellBtnSubmit = document.getElementById(
+      `${config.upsellItemSubmitId}-mobile`
+    );
+    upsellBtnPlus = document.getElementById(
+      `${config.upsellItemPlusId}-mobile`
+    );
+    upsellBtnMinus = document.getElementById(
+      `${config.upsellItemMinusId}-mobile`
+    );
+  }
+  if (upsellItem) {
+    const bananaBlueberry = product.variants.nodes.find(function (variant) {
+      return variant.title === "Banana Blueberry";
+    });
+
+    var variantId = removePrefixFromId(bananaBlueberry.id);
+
+    upsellItem.innerHTML = elShopImage(
+      bananaBlueberry.image.src,
+      bananaBlueberry.title,
+      window.innerWidth < 480 ? 80 : 120,
+      window.innerWidth < 480 ? 80 : 120
+    );
+
+    upsellItemTitle.innerText = bananaBlueberry.title + " Smoothie";
+
+    upsellItemPrice.innerHTML = `${window.CURRENCY}${bananaBlueberry.price.amount}`;
+
+    populateProductsDataGlobal(product);
+
+    upsellBtnSubmit.dataset.productId = variantId;
+    upsellBtnSubmit.dataset.productQuantity = "1";
+
+    upsellBtnPlus.addEventListener("click", function () {
+      var finalValue = String(+upsellItemQuantity.innerHTML + 1);
+      if (finalValue <= bananaBlueberry?.quantityAvailable) {
+        upsellItemQuantity.innerHTML = finalValue;
+        upsellBtnSubmit.dataset.productQuantity = finalValue;
+        upsellItemPrice.innerHTML = `${window.CURRENCY}${(
+          +bananaBlueberry.price.amount * +finalValue
+        ).toFixed(2)}`;
+      }
+    });
+
+    upsellBtnMinus.addEventListener("click", function () {
+      var finalValue = String(+upsellItemQuantity.innerHTML - 1);
+      if (finalValue > 0) {
+        upsellItemQuantity.innerHTML = finalValue;
+        upsellBtnSubmit.dataset.productQuantity = finalValue;
+        upsellItemPrice.innerHTML = `${window.CURRENCY}${(
+          +bananaBlueberry.price.amount * +finalValue
+        ).toFixed(2)}`;
+      }
+    });
+  }
 }
 
 function shopSectionRender(products) {
@@ -118,6 +204,7 @@ function shopSectionRender(products) {
         product.options.forEach(function (option) {
           var elOption = document.createElement("div");
           var elTitle = document.createElement("p");
+          var elTitleLabel = document.createElement("span");
           var elTitleValue = document.createElement("span");
           var elValues = document.createElement("div");
           var elCloseValues = document.createElement("span");
@@ -166,8 +253,9 @@ function shopSectionRender(products) {
           elOption.classList.add(option.name.toLowerCase());
           elTitle.classList.add("shop-custom-option__title");
           elTitleValue.classList.add("shop-custom-option__title-value");
+          elTitleLabel.classList.add("shop-custom-option__title-label");
           elValues.classList.add("shop-custom-option__values");
-          elTitle.innerHTML = `${option.name}: &nbsp;`;
+          elTitleLabel.innerHTML = `${option.name}: &nbsp;`;
           if (swatchPng) {
             elTitleSwatch.innerHTML = elShopImage(
               swatchPng.reference.image.originalSrc,
@@ -236,11 +324,40 @@ function shopSectionRender(products) {
             } else {
               elValue.innerHTML = value;
             }
+            document.onclick = function (e) {
+              var optionParent = elCloseValues.closest(".shop-custom-option");
+              if (
+                (window.innerWidth > 767 &&
+                  !e.target.classList.contains("shop-custom-option__values") &&
+                  !e.target.classList.contains("shop-custom-option__value") &&
+                  !e.target.classList.contains("shop-custom-option__title")) ||
+                (window.innerWidth <= 767 &&
+                  optionParent.classList.contains("active") &&
+                  e.target.classList.contains("shop-custom-option__title"))
+              ) {
+                optionParent.classList.remove("active");
+                var body = document.querySelector("body");
+                body.style.overflow = "unset";
+              }
+
+              //   else if (optionParent.classList.contains("active")) {
+              //     optionParent.classList.remove("active");
+              //     var body = document.querySelector("body");
+              //     body.style.overflow = "unset";
+              //   }
+            };
             elTitle.addEventListener("click", function () {
-              var optionParent = elTitle.closest(".shop-custom-option");
-              optionParent.classList.add("active");
-              var body = document.querySelector("body");
-              body.style.overflow = "hidden";
+              if (
+                document.querySelector(".shop-custom") &&
+                document
+                  .querySelector(".shop-custom")
+                  .classList.contains("scrolled-past")
+              ) {
+                var optionParent = elTitle.closest(".shop-custom-option");
+                optionParent.classList.add("active");
+                var body = document.querySelector("body");
+                body.style.overflow = "hidden";
+              }
             });
             elCloseValues.addEventListener("click", function () {
               var optionParent = elCloseValues.closest(".shop-custom-option");
@@ -249,6 +366,25 @@ function shopSectionRender(products) {
               body.style.overflow = "unset";
             });
             elValue.onclick = function (e) {
+              //Switch slider back to pdp image
+              const videoSlide = document.querySelector(".slide-1");
+              const descSlide = document.querySelector(".slide-2");
+              const pdpSlide = document.querySelector(".slide-3");
+              const leftArrowBtn = document.querySelector(
+                ".w-slider-arrow-left"
+              );
+              const rightArrowBtn = document.querySelector(
+                ".w-slider-arrow-right"
+              );
+
+              if (pdpSlide.hasAttribute("aria-hidden")) {
+                if (videoSlide.hasAttribute("aria-hidden")) {
+                  rightArrowBtn.click();
+                } else if (descSlide.hasAttribute("aria-hidden")) {
+                  leftArrowBtn.click();
+                }
+              }
+
               e.target.parentNode
                 .querySelectorAll(".shop-custom-option__value")
                 .forEach(function (item) {
@@ -262,9 +398,9 @@ function shopSectionRender(products) {
               var body = document.querySelector("body");
               body.style.overflow = "unset";
               // Update option title
-              var elTitleValue = e.target
-                .closest(".shop-custom-option")
-                ?.querySelector(".shop-custom-option__title-value");
+              var elTitleValue = document.querySelector(
+                ".shop-custom-option__title-value"
+              );
 
               if (elTitleValue) {
                 elTitleValue.innerHTML = e.target.dataset.id;
@@ -277,6 +413,7 @@ function shopSectionRender(products) {
 
             elValues.appendChild(elValue);
             elValues.appendChild(elCloseValues);
+            elTitle.appendChild(elTitleLabel);
             elTitle.appendChild(elTitleSwatch);
           });
 
@@ -331,8 +468,8 @@ function currentVariantHandler(product, el) {
       domGalleryEl.innerHTML = elShopImage(
         currentVariant?.image?.src,
         currentVariant?.image?.altText || currentVariant.title,
-        300,
-        300
+        478,
+        478
       );
     }
   }
@@ -352,6 +489,11 @@ function currentVariantHandler(product, el) {
     el.querySelector(".shop-custom-submit__price-compare").innerHTML = `${
       window.CURRENCY
     }${pricesCompare.toFixed(2)}`;
+    document.querySelector(".afterpay-price").innerHTML = `${window.CURRENCY}${(
+      (currentVariant?.price?.amount
+        ? +currentVariant?.price?.amount
+        : +currentVariant?.compareAtPrice?.amount) / 4
+    ).toFixed(2)}`;
     elPlus.disabled = false;
     elMinus.disabled = false;
   } else {
@@ -572,3 +714,87 @@ function getVariantById(id) {
     return String(id) === String(variant.id);
   });
 }
+
+window.onload = function () {
+  // Changing See All Colors to See Less and vice versa
+  const seeMoreBtn = document.querySelector(".shop-custom-see-more");
+  const seeMoreTextBlock = seeMoreBtn.querySelector(".see-more-text");
+  const origSwatchHeight = document.querySelector(
+    ".shop-custom-options"
+  ).offsetHeight;
+
+  seeMoreBtn.onclick = function () {
+    const expandText = "See All Colors";
+    const shrinkText = "See Less";
+
+    setTimeout(() => {
+      const newSwatchHeight = document.querySelector(
+        ".shop-custom-options"
+      ).offsetHeight;
+      var heightDiff;
+
+      if (seeMoreTextBlock.innerText === expandText) {
+        seeMoreTextBlock.innerText = shrinkText;
+        heightDiff = Math.abs(origSwatchHeight - newSwatchHeight);
+        if (window.innerWidth <= 991 && window.innerWidth >= 480) {
+          window.scrollTo({
+            top: 370 + heightDiff,
+            left: 0,
+            behavior: "smooth",
+          });
+        } else if (window.innerWidth < 480) {
+          window.scrollTo({
+            top: 320 + heightDiff,
+            left: 0,
+            behavior: "smooth",
+          });
+        } else {
+          window.scrollTo({
+            top: 120 + heightDiff,
+            left: 0,
+            behavior: "smooth",
+          });
+        }
+      } else {
+        seeMoreTextBlock.innerText = expandText;
+        if (window.innerWidth <= 991) {
+          window.scrollTo({
+            top: 530,
+            left: 0,
+            behavior: "smooth",
+          });
+        } else {
+          window.scrollTo({
+            top: 280,
+            left: 0,
+            behavior: "smooth",
+          });
+        }
+      }
+    }, 300);
+  };
+
+  // Stop Slider Scroll at the end of PDP section
+  if (window.innerWidth > 991) {
+    const fixedElement = document.querySelector(".shop-gallery-row");
+
+    fixedElement.style.top = "0rem";
+    fixedElement.style.position = "absolute";
+    fixedElement.style.display = "flex";
+
+    document.addEventListener("scroll", function () {
+      var pdpSectionHeight =
+        document.querySelector(".pdp-section").offsetHeight;
+      var stopScrollingAt = pdpSectionHeight - 650;
+      if (window.scrollY >= stopScrollingAt) {
+        fixedElement.style.top = `${pdpSectionHeight - 650}px`;
+        fixedElement.style.position = "absolute";
+      } else {
+        fixedElement.style.top = "9rem";
+        fixedElement.style.position = "fixed";
+      }
+    });
+  }
+  //TODO: IF VIEWPORT HAS Y VALUE BETWEEN X AND Y -> INNER-TEXT IS BLANK
+  //      ELSE INNER-TEXT IS ORIGINAL;
+};
