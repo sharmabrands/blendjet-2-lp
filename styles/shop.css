@@ -27,7 +27,7 @@
 .shop-custom.scrolled-past .shop-custom-sticky {
   width: 100vw;
   position: fixed;
-  bottom: 0px;
+  bottom: 30dvh;
   left: 0;
   height: 3.5rem !important;
   gap: 15%;
@@ -255,7 +255,7 @@
 
 @media (max-width: 767px) {
   .shop-custom.scrolled-past .shop-custom-option__values {
-    height: 86.25dvh;
+    height: 60dvh;
     width: 100dvw;
     gap: 25px;
     max-width: none;
@@ -318,7 +318,7 @@
   .shop-custom.scrolled-past .shop-custom-option__values {
     width: 106dvw !important;
     gap: 15px !important;
-    transform: translateX(-4rem) !important;
+    transform: translateX(-3rem) !important;
   }
 
   .shop-custom.scrolled-past .shop-custom-sticky {

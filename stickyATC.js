@@ -15,22 +15,20 @@ if (parentDiv) {
   window.addEventListener("scroll", function () {
     if (
       isInViewport(startSticky) ||
-      isInViewport(pdp) ||
-      isInViewport(footer)
+      isInViewport(pdp) || ((window.innerWidth > 991) &&
+      isInViewport(footer))
     ) {
       if (parentDiv.classList.contains(PAST_PDP)) {
-        shopSticky.style.opacity = "1";
         parentDiv.classList.remove(PAST_PDP);
         atcText.innerText = "ADD TO CART - ";
 
-        if (window.innerWidth <= 568) {
+        if (window.innerWidth <= 767) {
             colorTitle.innerText = "COLOR: &nbsp;";
             colorValue.style.display = "block";
         }
       }
     } else {
       if (!parentDiv.classList.contains(PAST_PDP)) {
-        shopSticky.style.opacity = "1";
         parentDiv.classList.add(PAST_PDP);
         atcText.innerText = "ADD - ";
 
